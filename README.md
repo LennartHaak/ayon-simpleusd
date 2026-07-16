@@ -1,94 +1,41 @@
-Example addon
+AYON SimpleUSD Plugin
 =============
+This plugin aims to simplify AYONs USD workflow as it is a bit overkill for smaller productions.
 
-Premises
---------
+At the moment it only supports Houdini but we are planning on adding Nuke and Blender support.
 
-Addon repository (at least its server part) should work when cloned in the addon directory.
+This Plugin isn't an official AYON addon and has no affiliation with them.
 
-```bash
-cd addons/
-mkdir example
-cd example
-git clone https://github.com/ynput/ayon-example-rez-addon dev
-```
+### AYON Setup
 
+- Set the $ASSET as a custom Env Var inside the Ayon-Houdini Plugin
+  - Can be anything that represents your asset Name
+    - I use: {project[name]_folder[name]}
 
-Value of the version part of the addon path is not significant, so for development, it is possible to use `dev`.
+### HDAs and Templates
 
-```
-addons/example
-  ├── 1.0.0
-  └── dev
-      ├── client
-      ├── frontend
-      │   ├── dist
-      │   └── package.json
-      ├── package
-      ├── package.py
-      ├── private
-      ├── public
-      ├── README.md
-      ├── server
-      │   ├── __init__.py
-      │   ├── settings.py
-      │   └── site_settings.py
-      └── services
-```
+- The plugin doesn't auto install HDAs or Templates at the moment (...yet)
+  - You can find them in the HDA and the templates folder of this repo and can add them manually to your project
 
-Name of the addon and its version is defined in `package.py` it is the single source of truth for the version information.
+### SimpleUSD Publishers
 
-The addon build script (implementation TBD - rez build?) creates a zip package with similar structure as the repository itself,
-but should ommit files not needed by the server and buil
+Model publish
+-saves to:
+  - model_name --> work --> task --> usd
+  - model_name --> publish --> task --> usd
+- Treated as a single file
+
+Material publish
+- saves to:
+  - model_name --> work --> task --> usd
+  - model_name --> publish --> task --> usd
+- Treated as a look file
 
 
-Directory structure
--------------------
+### SimpleUSD Loaders
 
-### client
+Reference USD
+- works as a normal Houdini Reference Node with the $ASSET env variable set as sourcename
 
-Source code of the client code. Build script (?) should create a client zip file from the source and put it to `private` directory,
-create `checksums.json` and include it to the zip file. **TODO**
-
-### frontend
-
-Web frontend of the addon. Frontend is served if `frontend/dist/index.html` exists.
-If the frontend is a javascript app, dist directory should be gitignored, build script should run `yarn build` (or equivalent)
-and put the `frontend/dist` to the resulting zip package. 
-
-Other files (`src/`, `package.json`, `node_modules`...) should not be packed.
-
-Frontend is no longer a subdirectory of "server".
-
-### package
-
-Target directory where the build script should put the resulting zip file as `{addon_name}-{addon_version}.zip`
-
-This directory should be gitignored.
-
-### private
-
-Contains static content available for download for authenticated users.
-
-If the addon does not use this functionality, the directory shouldn't be present.
-If the directory exists, build script packs it to the resulting zip file.
-
-### public
-
-Contains static content available for download publicly.
-
-If the addon does not use this functionality, the directory shouldn't be present.
-If the directory exists, build script packs it to the resulting zip file.
-
-### server
-
-Python server-side part of the addon. Contains an implementation of `BaseServerAddon` class.
-
-### services
-
-This directory shouldn't be present in the resulting zip file.
-
-
-### package.py
-
-This file MUST be present in the resulting zip file
+Sublayers USD
+- works as a normal Houdini Sublayer Node

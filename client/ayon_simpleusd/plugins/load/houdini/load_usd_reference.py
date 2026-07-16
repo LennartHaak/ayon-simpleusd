@@ -13,7 +13,7 @@ class USDModelReferenceLoader(plugin.HoudiniLoader):
     product_types = {"model","look"}
     label = "Reference USD"
     representations = {"usd", "usda", "usdlc", "usdnc"}
-    order = -8
+    order = 0
     icon = "code-fork"
     color = "orange"
     use_ayon_entity_uri = False
@@ -24,6 +24,9 @@ class USDModelReferenceLoader(plugin.HoudiniLoader):
         namespace = namespace if namespace else context["folder"]["name"]
         node_name = "{}_{}".format(namespace, name) if namespace else name
 
+    #TODO:Try sourcename as $ASSET if it still works. I wouldn't need the fetch for USD Structure
+    #NOTE:Is it possible to also create subnet with custom Icon and custom settings?
+    #WARN:If the loader is an HDA it might not be detected on the Farm or do they work like Toolsets in Nuke where it just treats them like normal nodes?
         container = stage.createNode("reference", node_name=node_name)
         container.setParms({
             "filepath1": file_path,

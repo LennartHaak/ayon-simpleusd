@@ -36,6 +36,7 @@ class CreateSimpleUSDMaterial(plugin.HoudiniCreator):
             "CollectUSDLayerContributions": {"contribution_enabled": False},
             # Redundant now that "defaultprim" is locked to $ASSET
             "ValidateUSDAssetContributionDefaultPrim": {"active": False},
+            "ValidateUsdLookAssignments": {"active": False},
             "ValidateInstanceInContextHoudini": {"active": False},
             "IntegrateHeroVersion": {"active": False},
         })
