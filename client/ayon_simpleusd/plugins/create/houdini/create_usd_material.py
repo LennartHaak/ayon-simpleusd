@@ -19,10 +19,18 @@ class CreateSimpleUSDMaterial(plugin.HoudiniCreator):
 
     render_target = "local"
 
+    # Loader group the published products are put under. Any name creates
+    # its own group folder; "USD Layer" would merge with AYON's default
+    # USD contribution workflow group.
+    product_group = "SimpleUSD Layers"
+
     def create(self, product_name, instance_data, pre_create_data):
         # "usd" (Driver/usd) only exists in the ROP category; the native
         # LOP-context equivalent living directly inside /stage is "usd_rop".
-        instance_data.update({"node_type": "usd_rop"})
+        instance_data.update({
+            "node_type": "usd_rop",
+            "productGroup": self.product_group,
+        })
         creator_attributes = instance_data.setdefault(
             "creator_attributes", dict())
         creator_attributes["render_target"] = pre_create_data["render_target"]
@@ -41,7 +49,7 @@ class CreateSimpleUSDMaterial(plugin.HoudiniCreator):
             "IntegrateHeroVersion": {"active": False},
         })
 
-        instance = super(CreateSimpleUSDMaterial, self).create(
+        instance = super().create(
             product_name,
             instance_data,
             pre_create_data)

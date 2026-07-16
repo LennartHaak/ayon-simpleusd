@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """Loader plugin for referencing a published USD model into Solaris."""
 import hou
+from pxr import Tf
 
 from ayon_core.pipeline import AYON_CONTAINER_ID
 from ayon_houdini.api import lib, plugin
@@ -23,13 +24,17 @@ class USDModelReferenceLoader(plugin.HoudiniLoader):
         stage = hou.node("/stage")
         namespace = namespace if namespace else context["folder"]["name"]
         node_name = "{}_{}".format(namespace, name) if namespace else name
+        prim_name = "{}_{}".format(
+            context["project"]["code"], context["folder"]["name"]
+        )
+        primpath = "/{}".format(Tf.MakeValidIdentifier(prim_name))
 
-    #TODO:Try sourcename as $ASSET if it still works. I wouldn't need the fetch for USD Structure
     #NOTE:Is it possible to also create subnet with custom Icon and custom settings?
     #WARN:If the loader is an HDA it might not be detected on the Farm or do they work like Toolsets in Nuke where it just treats them like normal nodes?
         container = stage.createNode("reference", node_name=node_name)
         container.setParms({
             "filepath1": file_path,
+            "primpath1": primpath,
         })
         move_node_to_viewport(container)
 
