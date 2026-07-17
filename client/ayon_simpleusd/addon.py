@@ -42,6 +42,9 @@ class SimpleUSDAddon(AYONAddon, IPluginPaths):
             paths.append(global_path)
         return paths
 
+    def get_launch_hook_paths(self, app):
+        return [os.path.join(SIMPLEUSD_ADDON_ROOT, "hooks")]
+
     def add_implementation_envs(self, env, app):
         if app.host_name != "houdini":
             return

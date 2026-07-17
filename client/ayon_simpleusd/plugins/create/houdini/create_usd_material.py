@@ -42,7 +42,6 @@ class CreateSimpleUSDMaterial(plugin.HoudiniCreator):
         publish_attributes.update({
             # "USD Contribution > Enable" (CollectUSDLayerContributions)
             "CollectUSDLayerContributions": {"contribution_enabled": False},
-            # Redundant now that "defaultprim" is locked to $ASSET
             "ValidateUSDAssetContributionDefaultPrim": {"active": False},
             "ValidateUsdLookAssignments": {"active": False},
             "ValidateInstanceInContextHoudini": {"active": False},
