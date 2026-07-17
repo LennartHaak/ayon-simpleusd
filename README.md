@@ -70,7 +70,7 @@ Sublayers USD
 - Get Payloading of assets to work
   - It shouldn't be to complicated I just don't know how it works yet
 
-- Include HDAs and Templates in the Plugin
+- Include HDAs and Templates in the Plugin and automatically install them
 
 - remove the project code prefix in $ASSET and usd_reference and usd_root_reference loaders
 

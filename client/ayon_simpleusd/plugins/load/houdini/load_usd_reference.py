@@ -24,10 +24,8 @@ class USDModelReferenceLoader(plugin.HoudiniLoader):
         stage = hou.node("/stage")
         namespace = namespace if namespace else context["folder"]["name"]
         node_name = "{}_{}".format(namespace, name) if namespace else name
-        prim_name = "{}_{}".format(
-            context["project"]["code"], context["folder"]["name"]
-        )
-        primpath = "/{}".format(Tf.MakeValidIdentifier(prim_name))
+        primpath = "/{}".format(
+            Tf.MakeValidIdentifier(context["folder"]["name"]))
 
     #NOTE:Is it possible to also create subnet with custom Icon and custom settings?
     #WARN:If the loader is an HDA it might not be detected on the Farm or do they work like Toolsets in Nuke where it just treats them like normal nodes?

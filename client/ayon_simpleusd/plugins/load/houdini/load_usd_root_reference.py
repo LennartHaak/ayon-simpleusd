@@ -31,10 +31,8 @@ class USDRootReferenceLoader(plugin.HoudiniLoader):
         stage = hou.node("/stage")
         namespace = namespace if namespace else context["folder"]["name"]
         node_name = "{}_{}".format(namespace, name) if namespace else name
-        prim_name = "{}_{}".format(
-            context["project"]["code"], context["folder"]["name"]
-        )
-        primpath = "/{}".format(Tf.MakeValidIdentifier(prim_name))
+        primpath = "/{}".format(
+            Tf.MakeValidIdentifier(context["folder"]["name"]))
 
         container = stage.createNode("reference", node_name=node_name)
         container.setParms({
