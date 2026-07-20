@@ -6,16 +6,16 @@ from ayon_core.lib import EnumDef
 import hou
 
 
-class CreateSimpleUSDRoot(plugin.HoudiniCreator):
+class CreateSimpleUSDRootAsset(plugin.HoudiniCreator):
     """Publish a USD Root Asset from Solaris (/stage)."""
 
-    identifier = "io.ayon.creators.houdini.simpleusd.root"
-    label = "SimpleUSD Root"
+    identifier = "io.ayon.creators.houdini.simpleusd.root_asset"
+    label = "SimpleUSD Root Asset"
     product_type = "root"
     product_base_type = "root"
     icon = "link"
     enabled = True
-    description = "Create USD Asset model"
+    description = "Create USD Root Asset"
 
     render_target = "local"
 
