@@ -1,35 +1,43 @@
 # -*- coding: utf-8 -*-
-"""Keep the $ASSET Houdini variable in sync with the AYON context.
+"""Keep $ASSET and $SQ Houdini variables in sync with the AYON context.
 
-At launch $ASSET is set by the prelaunch hook (hooks/pre_asset_env.py);
-this module updates it when the artist switches task context inside a
+At launch they're set by the prelaunch hook (hooks/pre_asset_env.py);
+this module updates them when the artist switches task context inside a
 running Houdini session, mirroring ayon-houdini's "Houdini Vars" feature
 but hardcoded instead of settings-driven.
 """
 import os
 
 
-def _compute_asset_var():
+def _compute_context_vars():
     from pxr import Tf
     from ayon_core.pipeline.context_tools import get_current_context
 
     context = get_current_context()
-    folder_name = context["folder_path"].rsplit("/", 1)[-1]
-    return Tf.MakeValidIdentifier(folder_name)
+    parts = context["folder_path"].strip("/").split("/")
+    asset_name = Tf.MakeValidIdentifier(parts[-1])
+    sequence_name = Tf.MakeValidIdentifier(parts[-2]) if len(parts) >= 2 \
+        else ""
+    return {"ASSET": asset_name, "SQ": sequence_name}
 
 
-def update_asset_var():
+def update_context_vars():
     import hou
 
-    value = _compute_asset_var()
-    current = hou.hscript("echo -n `$ASSET`")[0]
-    if current == value:
-        return
-    hou.hscript("set ASSET={}".format(value))
-    os.environ["ASSET"] = value
-    # Recook nodes whose parms reference $ASSET (e.g. locked defaultprim)
-    hou.hscript("varchange ASSET")
-    print("Updated $ASSET to {}".format(value))
+    changed = []
+    for var, value in _compute_context_vars().items():
+        current = hou.hscript("echo -n `${}`".format(var))[0]
+        if current == value:
+            continue
+        hou.hscript("set {}={}".format(var, value))
+        os.environ[var] = value
+        changed.append(var)
+        print("Updated ${} to {}".format(var, value))
+
+    if changed:
+        # Recook nodes whose parms reference these vars (e.g. locked
+        # defaultprim).
+        hou.hscript("varchange {}".format(" ".join(changed)))
 
 
 def _on_hip_event(event_type):
@@ -39,16 +47,16 @@ def _on_hip_event(event_type):
         hou.hipFileEventType.AfterLoad,
         hou.hipFileEventType.AfterClear,
     ):
-        update_asset_var()
+        update_context_vars()
 
 
 def register_callbacks():
     import hou
     from ayon_core.lib import register_event_callback
 
-    register_event_callback("taskChanged", update_asset_var)
+    register_event_callback("taskChanged", update_context_vars)
     # Hip files store the session's global variables and restore them on
-    # load, so any scene load can revert $ASSET to a stale saved value
+    # load, so any scene load can revert these vars to stale saved values
     # (e.g. a startup template, or workfiles - which emits taskChanged
     # BEFORE loading the file). Houdini's own hip events catch every
     # load, including ones AYON emits no event for.

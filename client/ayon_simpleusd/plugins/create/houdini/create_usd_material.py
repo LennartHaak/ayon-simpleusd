@@ -79,7 +79,6 @@ class CreateSimpleUSDMaterial(plugin.HoudiniCreator):
         parent,
         node_type="geometry",
         pre_create_data=None,
-        node_custom_parameter=None,
         instance_data=None
     ):
         # This creator always publishes from Solaris - force /stage
@@ -90,7 +89,6 @@ class CreateSimpleUSDMaterial(plugin.HoudiniCreator):
             "/stage",
             node_type,
             pre_create_data,
-            node_custom_parameter,
             instance_data,
         )
 

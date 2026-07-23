@@ -10,13 +10,13 @@ from pxr import Tf
 
 from ayon_core.pipeline import AYON_CONTAINER_ID
 from ayon_houdini.api import lib, plugin
-from ayon_houdini.api.lib import move_node_to_viewport
 
 
 class USDRootReferenceLoader(plugin.HoudiniLoader):
     """Reference a published root USD into Solaris (/stage)."""
 
     product_types = {"root"}
+    product_base_types = {"root"}
     label = "Reference Root USD"
     representations = {"usd", "usda", "usdlc", "usdnc"}
     # Lower than the Reference (0) and Sublayer (1) loaders so this action
@@ -39,7 +39,7 @@ class USDRootReferenceLoader(plugin.HoudiniLoader):
             "filepath1": file_path,
             "primpath1": primpath,
         })
-        move_node_to_viewport(container)
+        container.moveToGoodPosition()
 
         data = {
             "schema": "ayon:container-3.0",

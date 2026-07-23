@@ -5,13 +5,13 @@ from pxr import Tf
 
 from ayon_core.pipeline import AYON_CONTAINER_ID
 from ayon_houdini.api import lib, plugin
-from ayon_houdini.api.lib import move_node_to_viewport
 
 
 class USDModelReferenceLoader(plugin.HoudiniLoader):
     """Reference a published USD model into Solaris (/stage)."""
 
     product_types = {"model","look"}
+    product_base_types = {"model","look"}
     label = "Reference USD"
     representations = {"usd", "usda", "usdlc", "usdnc"}
     order = 0
@@ -34,7 +34,7 @@ class USDModelReferenceLoader(plugin.HoudiniLoader):
             "filepath1": file_path,
             "primpath1": primpath,
         })
-        move_node_to_viewport(container)
+        container.moveToGoodPosition()
 
         data = {
             "schema": "ayon:container-3.0",

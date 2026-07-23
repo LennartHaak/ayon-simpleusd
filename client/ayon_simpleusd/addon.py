@@ -42,6 +42,18 @@ class SimpleUSDAddon(AYONAddon, IPluginPaths):
             paths.append(global_path)
         return paths
 
+    def get_publish_plugin_paths(self, host_name: Optional[str] = None) -> List[str]:
+        publish_dir = os.path.join(SIMPLEUSD_ADDON_ROOT, "plugins", "publish")
+        paths = []
+        if host_name:
+            host_path = os.path.join(publish_dir, host_name)
+            if os.path.isdir(host_path):
+                paths.append(host_path)
+        global_path = os.path.join(publish_dir, "global")
+        if os.path.isdir(global_path):
+            paths.append(global_path)
+        return paths
+
     def get_launch_hook_paths(self, app):
         return [os.path.join(SIMPLEUSD_ADDON_ROOT, "hooks")]
 
