@@ -11,7 +11,7 @@ class USDModelReferenceLoader(plugin.HoudiniLoader):
     """Reference a published USD model into Solaris (/stage)."""
 
     product_types = {"model","look"}
-    product_base_types = {"model","look"}
+    product_base_types = {"model","look","fx"}
     label = "Reference USD"
     representations = {"usd", "usda", "usdlc", "usdnc"}
     order = 0

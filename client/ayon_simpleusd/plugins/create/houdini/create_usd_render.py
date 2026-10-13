@@ -24,37 +24,37 @@ class CreateSimpleUSDRender(plugin.HoudiniCreator):
 
     identifier = "io.ayon.creators.houdini.simpleusd.render"
     label = "Simple USD Render"
-    # Kept as "usdrenderPackage" (not "usdrender") so the existing
-    # RoyalRender farm-split plugins - which are keyed to this exact
-    # family - keep firing for products created here.
     product_type = "usdrenderPackage"
     product_base_type = "render"
     icon = "magic"
     enabled = True
     description = "Create Simple USD Render"
 
-    default_renderer = "Karma CPU"
+    default_renderer = "Karma XPU"
     render_target = "farm_split"
 
     # Loader group the published products are put under. Any name creates
     # its own group folder; "USD Layer" would merge with AYON's default
     # USD contribution workflow group.
     product_group = "SimpleUSD Renders"
+    turntable_product_group = "SimpleUSD Turntables"
 
     def create(self, product_name, instance_data, pre_create_data):
         creator_attributes = instance_data.setdefault(
             "creator_attributes", dict())
-        for key in ["render_target", "review"]:
+        for key in [
+            "render_target", "review", "isTurntable", "set_farm_status",
+        ]:
             if key in pre_create_data:
                 creator_attributes[key] = pre_create_data[key]
 
         instance_data.update({
-            # Native "USD Render" LOP node. Note: the internal type name
-            # is "usdrender_rop", not "usdrender" (unlike what the
-            # official ayon-houdini creator uses - confirmed via
-            # hou.lopNodeTypeCategory().nodeTypes() on Houdini 22).
             "node_type": "usdrender_rop",
-            "productGroup": self.product_group,
+            "productGroup": (
+                self.turntable_product_group
+                if pre_create_data.get("isTurntable")
+                else self.product_group
+            ),
         })
 
         instance = super().create(
@@ -65,7 +65,6 @@ class CreateSimpleUSDRender(plugin.HoudiniCreator):
         instance_node = hou.node(instance.get("instance_node"))
 
         parms = {
-            # Render frame range
             "trange": 1
         }
         if self.selected_nodes:
@@ -75,24 +74,10 @@ class CreateSimpleUSDRender(plugin.HoudiniCreator):
             "farm_split",
             "local_export_farm_render",
         }:
-            # Do not trigger the husk render, only trigger the USD export.
-            # The actual output path is set in set_node_staging_dir() once
-            # the staging dir is resolved.
             parms["runcommand"] = False
             parms["allframesatonce"] = True
 
-        # By default strip any Houdini custom data from the output file
-        # since the renderer doesn't care about it
         parms["clearhoudinicustomdata"] = True
-
-        # The "Save to Directory" output processor is enabled by default
-        # on usdrender_rop and silently redirects the real USD export
-        # write location away from whatever "lopoutput" is explicitly
-        # set to (confirmed directly: with it enabled, an explicit
-        # lopoutput override is ignored - the file either isn't written
-        # at all, or lands under savetodirectory_directory instead).
-        # Since we manage the output path ourselves (both locally and on
-        # the farm), disable it so "lopoutput" is honored directly.
         parms["enableoutputprocessor_savetodirectory"] = False
 
         # Use the first selected LOP node if "Use Selection" is enabled
@@ -166,19 +151,27 @@ class CreateSimpleUSDRender(plugin.HoudiniCreator):
 
         return [
             BoolDef("review",
-                    label="Include in Comparison Review",
-                    tooltip="Include this variant in the combined "
-                            "comparison video uploaded to Kitsu",
+                    label="Create Reviewable",
+                    tooltip="Creates a reviewable that gets uploaded to Kitsu/Shotgrid",
                     default=True),
             EnumDef("render_target",
                     items=render_target_items,
                     label="Render target",
-                    default=self.render_target)
+                    default=self.render_target),
+            BoolDef("set_farm_status",
+                    label="Set Farm Status",
+                    tooltip="Mark this task with the configured Farm "
+                            "status once submitted to the farm. Leave "
+                            "off for short renders where it's not "
+                            "worth flagging.",
+                    default=True),
+            BoolDef("isTurntable",
+                    label="Turntable",
+                    tooltip="Assigns the Turntable Product Group to the output",
+                    default=False),
         ]
 
     def get_pre_create_attr_defs(self):
-        # Retrieve available renderers and convert default renderer to
-        # plug-in name if settings provided the display name
         renderer_plugin_to_display_name = get_usd_rop_renderers()
         default_renderer = self.default_renderer or None
         if (

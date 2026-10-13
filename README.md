@@ -23,31 +23,15 @@ This Plugin isn't an official AYON addon and has no affiliation with them.
 
 ##Assets
 
-`Model publish`
--saves to:
-  - model_name --> work --> task --> usd
-  - model_name --> publish --> task --> usd
-- Treated as a single file
-
-Material publish
+`SimpleUSD Asset publish`
+- one creator with an "Asset Type" dropdown: Model, Material, Asset FX, Asset Groom
+  (previously four separate publishers, now merged since they only differed
+  in which product type they assigned)
 - saves to:
   - model_name --> work --> task --> usd
   - model_name --> publish --> task --> usd
-- Treated as a look file
-
-Asset FX publish
-- saves to:
-  - model_name --> work --> task --> usd
-  - model_name --> publish --> task --> usd
-- Treated as a single file
-- Doesnt support .bgeo caching at the moment
-
-Asset Groom publish
-- saves to:
-  - model_name --> work --> task --> usd
-  - model_name --> publish --> task --> usd
-- Treated as a single file
-- Doesnt support .bgeo caching at the moment if that is even what is used for grooming
+- Treated as a single file (Material is treated as a look file)
+- Asset FX / Asset Groom don't support .bgeo caching at the moment
 
 Root Asset Publish
 - saves to:
@@ -64,10 +48,6 @@ Sublayers USD (Not needed can be removed)
 - works as a normal Houdini Sublayer Node
 
 ###To-Do
-
-- Get Payloading of assets to work
-  - It shouldn't be to complicated I just don't know how it works yet
-
 - Include HDAs and Templates in the Plugin and automatically install them
 
 - Rig Publisher for Assets
@@ -93,17 +73,6 @@ Sublayers USD (Not needed can be removed)
 
   - Create Shot Loader
     - Although this will mainly be needed for Multi Shot and can be done later
-
-- RenderPackage Publisher
-  - should work like the USDRenderPackage from royalrender plugin
-  - should be called something like SimpleUSD Render
-  - put all Renders in a Group to keep loader clean
-    - remove the USDRenderPackage prefix in the loader to find passes easier
-  - It should upload a reviewable to Kitsu/Shotgrid
-    - It should create a contact sheet of all passes send at once and upload it as a reviewable
-      - The contact sheet should be automatically generated and adjusted based on how many render packages are send at once
-      - It should label the passes with the name of the render package
-  - If we don't use AYON Nodes we can maybe use the default USD Render option inside Ayon-Houdini as a base instead of the royalrender plugins version
 
 - Automatically create Turntable for Assets
   - Model Turntable
@@ -131,3 +100,10 @@ Sublayers USD (Not needed can be removed)
   - This is the thing I will do if no to-dos are left :)
   - Have the user switch between lighting files as we don't have a assembly file
   - The first version of a lighting file has to be created for it to show inside the multi shot loader
+
+- Root File
+  - Loading a root file into a task mutes the task its loaded into
+    - have a layer break under the root file to allow for task specific overrides
+
+- Rendering Task
+- Match Move Task
