@@ -3,7 +3,10 @@
 
 Replaces the previously separate Model/Material/Asset FX/Asset Groom
 creators with a single creator and an "Asset Type" dropdown, since they
-were identical apart from which product (base) type they assigned.
+were identical apart from which product (base) type they assigned. Root
+Asset was later merged in too - the only genuine differences were that
+it didn't set "savestyle" and had no "Update Root Asset" toggle (see the
+asset_type == "root" handling below and get_attr_defs_for_instance()).
 """
 from ayon_houdini.api import plugin
 from ayon_core.lib import BoolDef, EnumDef
@@ -21,7 +24,10 @@ class CreateSimpleUSDAsset(plugin.HoudiniCreator):
     product_base_type = "model"
     icon = "cubes"
     enabled = True
-    description = "Create USD Asset (Model / Material / Asset FX / Asset Groom)"
+    description = (
+        "Create USD Asset (Model / Material / Asset FX / Asset Groom / "
+        "Root Asset)"
+    )
 
     render_target = "local"
 
@@ -52,6 +58,11 @@ class CreateSimpleUSDAsset(plugin.HoudiniCreator):
             "product_type": "groom",
             "product_base_type": "groom",
             "label": "Asset Groom",
+        },
+        "root": {
+            "product_type": "root",
+            "product_base_type": "root",
+            "label": "Root Asset",
         },
     }
 
@@ -124,8 +135,12 @@ class CreateSimpleUSDAsset(plugin.HoudiniCreator):
         parms = {
             "enableoutputprocessor_simplerelativepaths": False,
             "defaultprim": "$ASSET",
-            "savestyle": "flattenstage",
         }
+        if asset_type != "root":
+            # Matches the original standalone Root Asset creator, which
+            # left this on the node's default (unset) rather than forcing
+            # "flattenstage" the way every other asset part does.
+            parms["savestyle"] = "flattenstage"
         if self.selected_nodes:
             parms["loppath"] = self.selected_nodes[0].path()
 
@@ -191,6 +206,22 @@ class CreateSimpleUSDAsset(plugin.HoudiniCreator):
                     label="Render target",
                     default=self.render_target)
         ]
+
+    def get_attr_defs_for_instance(self, instance):
+        # "Update Root Asset" doesn't make sense on a root instance
+        # itself - it's meant for the model/look/fx/groom parts that
+        # feed into root. Only affects the attribute panel of an
+        # already-created instance; the pre-create dialog has no
+        # instance yet to check against, so it still shows there
+        # regardless of the chosen Asset Type (harmless - nothing reads
+        # it for root instances).
+        attr_defs = self.get_instance_attr_defs()
+        if instance.data.get("productType") == "root":
+            attr_defs = [
+                attr_def for attr_def in attr_defs
+                if attr_def.key != "update_root_asset"
+            ]
+        return attr_defs
 
     def get_pre_create_attr_defs(self):
         asset_type_items = {

@@ -4,7 +4,6 @@ import hou
 
 from ayon_core.pipeline import AYON_CONTAINER_ID
 from ayon_houdini.api import plugin, lib
-from ayon_houdini.api.lib import move_node_to_viewport
 
 
 def get_current_context():
@@ -24,7 +23,7 @@ def get_current_context():
     # Fallback to /stage or /obj
     return hou.node("/stage") or hou.node("/obj")
 
-class MaterialXImageLoader(plugin.HoudiniLoader):
+class SimpleUSDMaterialXImageLoader(plugin.HoudiniLoader):
     """Load images as MaterialX texture inputs in the stage context."""
 
     product_types = {
@@ -62,7 +61,7 @@ class MaterialXImageLoader(plugin.HoudiniLoader):
         for ntype in image_node_candidates:
             try:
                 node = parent.createNode(ntype, node_name=node_name)
-                move_node_to_viewport(node)
+                node.moveToGoodPosition()
                 break
             except Exception:
                 pass

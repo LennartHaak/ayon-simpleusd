@@ -16,6 +16,10 @@ off pyblish instance data collected earlier in the publish.
 import pyblish.api
 
 PART_PRODUCT_TYPES = {"model", "look", "fx", "groom"}
+# "fx" is also used as a product type by the unrelated SimpleUSD Shot
+# creator (create_usd_shot.py) - gate on the actual creator too so a
+# shot FX publish doesn't get swept into this asset-part-only pathway.
+ASSET_CREATOR_IDENTIFIER = "io.ayon.creators.houdini.simpleusd.asset"
 
 
 class IntegrateSimpleUSDPartKitsuStatus(pyblish.api.InstancePlugin):
@@ -29,6 +33,8 @@ class IntegrateSimpleUSDPartKitsuStatus(pyblish.api.InstancePlugin):
 
     def process(self, instance):
         if instance.data.get("productType") not in PART_PRODUCT_TYPES:
+            return
+        if instance.data.get("creator_identifier") != ASSET_CREATOR_IDENTIFIER:
             return
 
         from ayon_simpleusd.kitsu_lib import (

@@ -31,6 +31,10 @@ from ayon_core.pipeline.load.utils import get_representation_path_by_names
 from ayon_houdini.api import plugin
 
 TRIGGER_PRODUCT_TYPES = {"model", "look", "fx", "groom"}
+# "fx" is also used as a product type by the unrelated SimpleUSD Shot
+# creator (create_usd_shot.py) - gate on the actual creator too so a
+# shot FX publish doesn't trigger an asset root auto-update.
+ASSET_CREATOR_IDENTIFIER = "io.ayon.creators.houdini.simpleusd.asset"
 
 
 class CollectSimpleUSDRootAutoUpdateInstance(plugin.HoudiniContextPlugin):
@@ -79,6 +83,9 @@ class CollectSimpleUSDRootAutoUpdateInstance(plugin.HoudiniContextPlugin):
                 continue
             product_type = instance.data.get("productType")
             if product_type not in TRIGGER_PRODUCT_TYPES:
+                continue
+            if instance.data.get(
+                    "creator_identifier") != ASSET_CREATOR_IDENTIFIER:
                 continue
             creator_attrs = instance.data.get("creator_attributes", {})
             # Default True: "on by default" even for instances created
