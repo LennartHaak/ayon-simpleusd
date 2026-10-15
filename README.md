@@ -8,6 +8,11 @@ At the moment it only supports Houdini but we are planning on adding Nuke and Bl
 
 This Plugin isn't an official AYON addon and has no affiliation with them.
 
+### Requirements
+
+- Houdini 22 (Python 3.13) needs an AYON dependency package **without** the old `future` 0.18.3 (its unguarded `import imp` crashes `import hou` on Python 3.12+). `ayon_2609041447` or newer is fine - Houdini then uses its own bundled, fixed `future`.
+- simple-usd 0.3.0 and older shipped a workaround for this (a vendored `future` shim prepended to PYTHONPATH); 0.3.1 removed it. Only put 0.3.1+ into a bundle whose dependency package is already updated.
+
 ### AYON Setup
 
 - The $ASSET env var is set automatically when Houdini is launched from AYON
