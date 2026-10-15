@@ -165,9 +165,10 @@ class CollectSimpleUSDRootAutoUpdateInstance(plugin.HoudiniContextPlugin):
             "variant": variant,
             "productGroup": self.product_group,
             "label": "{} ({})".format(product_name, folder_path),
-            "comment": "Automated root update triggered by: {}".format(
-                ", ".join(i.data["productName"] for i in trigger_instances)
-            ),
+            # No "comment" here - CollectSimpleUSDVersionComment writes
+            # the contributions/trigger note into the version comment
+            # (see collect_simpleusd_version_comment.py), on top of the
+            # artist's own context comment.
             # Always just increment from root's own last version - do not
             # try to follow whatever version number the workfile is on.
             "followWorkfileVersion": False,
@@ -226,8 +227,8 @@ class CollectSimpleUSDRootAutoUpdateArcs(plugin.HoudiniContextPlugin):
         # dict of productName/productType/version/path/arc/source_instance.
         # "source_instance" is set only for contributions coming from this
         # session's own triggering instances - used afterwards to stamp
-        # "merged into root" info back onto them for the Kitsu status
-        # plugin (see integrate_simpleusd_kitsu_status.py).
+        # "merged into root" info back onto them for the version comment
+        # plugin (see collect_simpleusd_version_comment.py).
         contributions = []
         covered_product_names = set()
 
@@ -336,8 +337,8 @@ class CollectSimpleUSDRootAutoUpdateArcs(plugin.HoudiniContextPlugin):
 
         # Stamp "merged into root" info back onto this session's own
         # triggering instances, consumed by
-        # IntegrateSimpleUSDPartKitsuStatus to report the merge outcome
-        # in that instance's own Kitsu comment.
+        # CollectSimpleUSDVersionComment to report the merge outcome in
+        # that instance's own version comment.
         for c in contributions:
             source_instance = c["source_instance"]
             if source_instance is None:

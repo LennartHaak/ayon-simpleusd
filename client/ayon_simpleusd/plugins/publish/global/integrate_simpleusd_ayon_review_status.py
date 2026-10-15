@@ -4,16 +4,10 @@ reviewable representation (tagged "review" or "webreview"), so AYON's
 own ShotGrid sync (server-side, driven off AYON task status changes)
 mirrors the status out to ShotGrid.
 
-Deliberately host/product-type-agnostic - unlike
-integrate_simpleusd_kitsu_status.py's model/look/fx/groom/root-specific
-classes, this fires for *any* instance that actually published a
-reviewable, mirroring how broadly ayon-kitsu's own
-CollectKitsuFamily/IntegrateKitsuNote used to flip Kitsu status
-(including workfile publishes that happened to carry a review-tagged
-playblast/thumbnail, gated by the apply_to_workfile setting below).
-
-A parallel, independent path - the existing Kitsu status plugins are
-untouched.
+Deliberately host/product-type-agnostic - this fires for *any* instance
+that actually published a reviewable (including workfile publishes that
+happened to carry a review-tagged playblast/thumbnail, gated by the
+apply_to_workfile setting below).
 
 Two deliberate exclusions, both found to cause this plugin to clobber
 a status set elsewhere in the very same (or a related) publish:

@@ -1,20 +1,6 @@
 from ayon_server.settings import BaseSettingsModel, SettingsField
 
 
-class KitsuIntegrationSettings(BaseSettingsModel):
-    enabled: bool = SettingsField(True, title="Enabled")
-    review_status_shortname: str = SettingsField(
-        "REV",
-        title="Review Status Shortname",
-        description=(
-            "Kitsu task status short name to set (with an explanatory "
-            "comment) when a Simple USD render comparison review, asset "
-            "part (model/look/fx/groom), or root asset is published. "
-            "Leave empty to post the comment without changing status."
-        ),
-    )
-
-
 class AyonReviewStatusSettings(BaseSettingsModel):
     status_name: str = SettingsField(
         "Aw. Review",
@@ -66,8 +52,7 @@ class RootAssetSettings(BaseSettingsModel):
             "Name of the task each asset's automatically-updated 'root' "
             "USD product is published under, regardless of which task "
             "the triggering model/look/fx/groom part was published "
-            "from. Must match an existing task name on the asset "
-            "(and its Kitsu task, for status/comment updates)."
+            "from. Must match an existing task name on the asset."
         ),
     )
     default_variant: str = SettingsField(
@@ -84,10 +69,6 @@ class RootAssetSettings(BaseSettingsModel):
 
 class SimpleUSDSettings(BaseSettingsModel):
     enabled: bool = SettingsField(True, title="Enabled")
-    kitsu: KitsuIntegrationSettings = SettingsField(
-        default_factory=KitsuIntegrationSettings,
-        title="Kitsu Integration",
-    )
     ayon_review_status: AyonReviewStatusSettings = SettingsField(
         default_factory=AyonReviewStatusSettings,
         title="AYON Review Status",

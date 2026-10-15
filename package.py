@@ -1,6 +1,6 @@
 name = "simple-usd"
 title = "Simple USD"
-version = "0.3.0"
+version = "0.3.1"
 client_dir = "ayon_simpleusd"
 
 ayon_required_addons = {

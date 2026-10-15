@@ -11,8 +11,8 @@ as its own farm job (which would require teaching RoyalRender's simple,
 order-based job-dependency graph to wait on an arbitrary set of sibling
 jobs), the actual video gets built later, on whichever variant's own farm
 republish pass happens to run last (see
-build_simpleusd_comparison_review.py in ayon-royalrender's farm-side
-plugins). This collector's only job is to compute, once per Houdini
+plugins/publish/global/build_simpleusd_comparison_review.py). This
+collector's only job is to compute, once per Houdini
 publish session, the list of included variants (and their resolved
 naming/frame-range/resolution) and stash an identical copy of it on
 every "Simple USD Render" instance, so it can ride along inside each
@@ -21,7 +21,7 @@ variant's own farm publish-job metadata JSON independently.
 import hou
 import pyblish.api
 
-from ayon_houdini.api import colorspace, lib, plugin
+from ayon_houdini.api import lib, plugin
 
 
 class CollectSimpleUSDComparisonMetadata(plugin.HoudiniContextPlugin):
@@ -74,13 +74,10 @@ class CollectSimpleUSDComparisonMetadata(plugin.HoudiniContextPlugin):
         sequence, shot = self._get_sequence_shot(context)
         version_str = "v{:03d}".format(included_instances[0].data["version"])
 
-        # Frames are rendered in Houdini's scene-linear working colorspace
-        # (ACEScg by default) - carry the scene's own OCIO config/display/
-        # view along so the farm-side video builder (which never imports
-        # `hou`, see build_simpleusd_comparison_review.py) can convert them
-        # to sRGB the same way Houdini's own viewport does, instead of
-        # burning in raw/unconverted linear values.
-        color_prefs = lib.get_color_management_preferences()
+        # No colorspace info needed here - the farm-side builder converts
+        # the (ACEScg) frames to sRGB with a fixed matrix + tonemap chain
+        # (see build_simpleusd_comparison_review.py), since OCIO tools
+        # aren't available on the farm.
         comparison_data = {
             "variants": variants,
             "resolutionWidth": width,
@@ -88,12 +85,7 @@ class CollectSimpleUSDComparisonMetadata(plugin.HoudiniContextPlugin):
             "fps": hou.fps(),
             "sequence": sequence,
             "shot": shot,
-            "version": included_instances[0].data["version"],
             "versionStr": version_str,
-            "colorspaceConfig": color_prefs.get("config"),
-            "colorspaceDisplay": color_prefs.get("display"),
-            "colorspaceView": color_prefs.get("view"),
-            "colorspace": colorspace.get_scene_linear_colorspace(),
         }
 
         for instance in included_instances:

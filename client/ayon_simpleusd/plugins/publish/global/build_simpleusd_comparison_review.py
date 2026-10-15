@@ -122,7 +122,6 @@ class BuildSimpleUSDComparisonReview(pyblish.api.ContextPlugin):
             self._build_video(comparison, output_path)
             self._upload_to_ayon(context, comparison, output_path)
             self._set_ayon_review_status(context)
-            self._upload_to_kitsu(context, comparison, output_path)
             self._cleanup_cache(render_dir)
         except Exception:
             # Don't fail the render product's own publish over a broken
@@ -468,7 +467,22 @@ class BuildSimpleUSDComparisonReview(pyblish.api.ContextPlugin):
         data through ayon-core's create_skeleton_instance(), which only
         carries over a fixed set of keys (productName among them) and
         drops arbitrary custom fields like simpleusdBaseName entirely.
+
+        Also appends a "Rendered variants: ... Published by ..." note to
+        each matched instance's version comment - set this early
+        (CollectorOrder + 0.05), CollectComment keeps it as-is and
+        IntegrateAsset writes it into the AYON version, which is what
+        ShotGrid's sync carries over to the ShotGrid Version.
         """
+        from ayon_simpleusd.publish_comment import (
+            append_comment, get_publisher_name)
+
+        note = "Rendered variants: {}.".format(
+            ", ".join(v["variant"] for v in comparison["variants"]))
+        publisher = get_publisher_name(comparison.get("artist"))
+        if publisher:
+            note += " Published by {}.".format(publisher)
+
         product_names = {v["productName"] for v in comparison["variants"]}
         matches = [
             instance for instance in context
@@ -495,6 +509,7 @@ class BuildSimpleUSDComparisonReview(pyblish.api.ContextPlugin):
                 # produced the final, color-managed, burned-in mp4.
                 "tags": ["webreview"],
             })
+            append_comment(instance, note)
             self.log.info(
                 "Attached comparison review as an AYON reviewable on "
                 "product '%s'.", instance.data.get("productName"),
@@ -537,61 +552,3 @@ class BuildSimpleUSDComparisonReview(pyblish.api.ContextPlugin):
                 "Failed to set AYON review status.", exc_info=True)
         else:
             self.log.info("Set task status to '%s'.", status_name)
-
-    # -- kitsu delivery --------------------------------------------------
-
-    def _upload_to_kitsu(self, context, comparison, output_path):
-        """Post a single Kitsu comment listing every included variant,
-        with the comparison video attached as its preview.
-
-        Deliberately bypasses ayon-kitsu's generic CollectKitsuEntities/
-        IntegrateKitsuNote/IntegrateKitsuReview chain - going through
-        those would drag in the studio's generic farm comment template
-        (which always includes a version number, since any
-        farm-published sibling instance in the same context makes
-        IntegrateKitsuNote treat this one as a farm publish too).
-        Kept as a parallel, best-effort delivery path alongside
-        _upload_to_ayon() above - gazu is already authenticated at this
-        point (ayon-kitsu's CollectKitsuLogin runs at CollectorOrder,
-        well before this plugin's CollectorOrder+0.05) and this simply
-        no-ops whenever no Kitsu task is linked.
-        """
-        task_entity = context.data.get("taskEntity")
-
-        from ayon_simpleusd.kitsu_lib import (
-            get_kitsu_task_id, is_kitsu_enabled, post_kitsu_status_comment)
-
-        project_name = context.data["projectName"]
-        if not is_kitsu_enabled(project_name):
-            return
-
-        kitsu_id = get_kitsu_task_id(task_entity)
-        if not kitsu_id:
-            self.log.warning(
-                "No Kitsu task linked for this context - skipping "
-                "Kitsu upload of the comparison review."
-            )
-            return
-
-        variant_names = [v["variant"] for v in comparison["variants"]]
-        comment_text = "Rendered variants: {}".format(
-            ", ".join(variant_names))
-
-        kitsu_comment = post_kitsu_status_comment(
-            project_name, kitsu_id, comment_text, log=self.log)
-        if not kitsu_comment:
-            return
-
-        import gazu
-
-        gazu.task.add_preview(
-            task=kitsu_id,
-            comment=kitsu_comment["id"],
-            preview_file_path=output_path,
-            normalize_movie=True,
-            revision=comparison.get("version"),
-        )
-        self.log.info(
-            "Uploaded comparison review to Kitsu task '%s': %s",
-            kitsu_id, output_path,
-        )

@@ -69,7 +69,7 @@ Sublayers USD (Not needed can be removed)
         - We treat Lighting as our file before the render
         - This should also be the file that gets send to royal render
         - maybe we can integrate the save with the royal render plugin so we don't need two publishers
-        - If we have multiple render layers that we publish all at once as different render packages can we get a contact sheet of all layers together send to Kitsu/Shotgrid?
+        - ~~If we have multiple render layers that we publish all at once as different render packages can we get a contact sheet of all layers together send to ShotGrid?~~ (done: comparison review)
 
   - Create Shot Loader
     - Although this will mainly be needed for Multi Shot and can be done later
@@ -91,7 +91,7 @@ Sublayers USD (Not needed can be removed)
       - Asset Turbtable should be saved in: Project --> Assets --> Asset_Name --> work --> task_name --> turntable
         - publish should be saved in: Project --> Assets --> Asset_Name --> publish --> task_name --> turntable --> version
         - Turntable version should always be the same as the asset version it was created from
-    - It should create a reviewable to be uploaded to Kitsu/Shotgrid
+    - It should create a reviewable to be uploaded to AYON (synced to ShotGrid)
       - Royal Render should render the turntable as a exr sequence and create a mov as reviewable in sRGB
       - It should move the move to the publish folder and remove the exr sequence from the work folder. It doesn't need to be saved
 

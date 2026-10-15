@@ -67,8 +67,6 @@ class CreateSimpleUSDRender(plugin.HoudiniCreator):
         parms = {
             "trange": 1
         }
-        if self.selected_nodes:
-            parms["loppath"] = self.selected_nodes[0].path()
 
         if pre_create_data.get("render_target") in {
             "farm_split",
@@ -152,7 +150,7 @@ class CreateSimpleUSDRender(plugin.HoudiniCreator):
         return [
             BoolDef("review",
                     label="Create Reviewable",
-                    tooltip="Creates a reviewable that gets uploaded to Kitsu/Shotgrid",
+                    tooltip="Creates a reviewable that gets uploaded to AYON (synced to ShotGrid)",
                     default=True),
             EnumDef("render_target",
                     items=render_target_items,

@@ -6,8 +6,6 @@ package/
 
 .claude/
 
-frontend/node_modules
-frontend/dist
-frontend/.env
-frontend/yarn.lock
-frontend/yarn-error.log
+# Stray test renders and Windows thumbnail caches
+*.exr
+Thumbs.db
