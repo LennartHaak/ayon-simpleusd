@@ -40,6 +40,13 @@ class SimpleUSDAddon(AYONAddon, IPluginPaths):
                 paths.append(path)
         return paths
 
+    def on_host_install(self, host, host_name, project_name):
+        # Houdini registers its workfile template callbacks from pythonrc,
+        # Blender has no such startup script for this addon.
+        if host_name == "blender":
+            from .blender_workfile_templates import register_callbacks
+            register_callbacks()
+
     def get_launch_hook_paths(self, app):
         # HOUDINI_PATH/startup is set up by hooks/pre_houdini_startup_path.py
         # - ayon-applications only calls add_implementation_envs() on the

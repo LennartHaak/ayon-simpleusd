@@ -4,6 +4,9 @@
 Because it is only compatible with "root" products, it shows up when
 right-clicking a product group (e.g. "SimpleUSD Layers") containing a
 root, and loads only that root file - not the other layers.
+
+The root is loaded with the "SimpleUSD Load Asset" HDA (startup/otls),
+which wraps a reference LOP and promotes its filepath1/primpath1 parms.
 """
 import hou
 from pxr import Tf
@@ -12,8 +15,23 @@ from ayon_core.pipeline import AYON_CONTAINER_ID
 from ayon_houdini.api import lib, plugin
 
 
+def _reload(node):
+    """Press 'reload' on the node, or on the reference LOP inside the HDA
+    (old scenes still hold plain reference containers)."""
+    parm = node.parm("reload")
+    if parm is None:
+        for child in node.allSubChildren():
+            if child.type().name().startswith("reference"):
+                parm = child.parm("reload")
+                if parm is not None:
+                    break
+    if parm is not None:
+        parm.pressButton()
+
+
 class USDRootReferenceLoader(plugin.HoudiniLoader):
-    """Reference a published root USD into Solaris (/stage)."""
+    """Reference a published root USD into Solaris (/stage) using the
+    SimpleUSD Load Asset HDA."""
 
     product_types = {"root"}
     product_base_types = {"root"}
@@ -25,6 +43,8 @@ class USDRootReferenceLoader(plugin.HoudiniLoader):
     icon = "link"
     color = "orange"
     use_ayon_entity_uri = False
+    # Unversioned so Houdini picks the newest installed HDA version.
+    node_type = "LennartHaak::SimpleUSD_Asset_Load"
 
     def load(self, context, name=None, namespace=None, data=None):
         file_path = self.filepath_from_context(context).replace("\\", "/")
@@ -34,7 +54,13 @@ class USDRootReferenceLoader(plugin.HoudiniLoader):
         primpath = "/{}".format(
             Tf.MakeValidIdentifier(context["folder"]["name"]))
 
-        container = stage.createNode("reference", node_name=node_name)
+        try:
+            container = stage.createNode(self.node_type, node_name=node_name)
+        except hou.OperationFailed:
+            self.log.warning(
+                "HDA '%s' is not installed, falling back to a reference "
+                "node.", self.node_type)
+            container = stage.createNode("reference", node_name=node_name)
         container.setParms({
             "filepath1": file_path,
             "primpath1": primpath,
@@ -59,7 +85,7 @@ class USDRootReferenceLoader(plugin.HoudiniLoader):
             "filepath1": file_path,
             "representation": context["representation"]["id"],
         })
-        node.parm("reload").pressButton()
+        _reload(node)
 
     def remove(self, container):
         container["node"].destroy()

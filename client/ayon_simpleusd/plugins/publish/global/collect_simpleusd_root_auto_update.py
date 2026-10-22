@@ -20,6 +20,9 @@ Split into two ContextPlugins around ayon-core's CollectAnatomyInstanceData
   our synthetic root instance) has anatomyData/version resolved, figure out
   the actual composition-arc source paths and stash them on the root
   instance for the extractor.
+
+Host-agnostic (plain pyblish plugins, no hou import) so a Blender
+"SimpleUSD Model (via Houdini)" publish updates root the same way.
 """
 import ayon_api
 import pyblish.api
@@ -28,16 +31,19 @@ from ayon_core.pipeline.create import get_product_name
 from ayon_core.pipeline.publish.lib import get_instance_expected_output_path
 from ayon_core.pipeline.load.utils import get_representation_path_by_names
 
-from ayon_houdini.api import plugin
-
 TRIGGER_PRODUCT_TYPES = {"model", "look", "fx", "groom"}
 # "fx" is also used as a product type by the unrelated SimpleUSD Shot
 # creator (create_usd_shot.py) - gate on the actual creator too so a
 # shot FX publish doesn't trigger an asset root auto-update.
-ASSET_CREATOR_IDENTIFIER = "io.ayon.creators.houdini.simpleusd.asset"
+ASSET_CREATOR_IDENTIFIERS = {
+    "io.ayon.creators.houdini.simpleusd.asset",
+    # Blender model converted through headless Houdini.
+    "io.ayon.creators.blender.simpleusd.model",
+}
+HOSTS = ["houdini", "blender"]
 
 
-class CollectSimpleUSDRootAutoUpdateInstance(plugin.HoudiniContextPlugin):
+class CollectSimpleUSDRootAutoUpdateInstance(pyblish.api.ContextPlugin):
     """Synthesize a "root" instance when a model/look/fx/groom instance
     with "Update Root Asset" enabled is about to be published."""
 
@@ -45,6 +51,7 @@ class CollectSimpleUSDRootAutoUpdateInstance(plugin.HoudiniContextPlugin):
     # Before CollectAnatomyInstanceData (CollectorOrder + 0.49) so it
     # resolves version/anatomyData for our synthetic instance too.
     order = pyblish.api.CollectorOrder + 0.3
+    hosts = HOSTS
 
     product_group = "SimpleUSD Layers"
 
@@ -85,7 +92,7 @@ class CollectSimpleUSDRootAutoUpdateInstance(plugin.HoudiniContextPlugin):
             if product_type not in TRIGGER_PRODUCT_TYPES:
                 continue
             if instance.data.get(
-                    "creator_identifier") != ASSET_CREATOR_IDENTIFIER:
+                    "creator_identifier") not in ASSET_CREATOR_IDENTIFIERS:
                 continue
             creator_attrs = instance.data.get("creator_attributes", {})
             # Default True: "on by default" even for instances created
@@ -147,7 +154,7 @@ class CollectSimpleUSDRootAutoUpdateInstance(plugin.HoudiniContextPlugin):
                 task_entity=task_entity,
                 product_base_type="root",
                 product_type="root",
-                host_name="houdini",
+                host_name=context.data["hostName"],
                 variant=variant,
                 project_settings=context.data["project_settings"],
             )
@@ -202,7 +209,7 @@ class CollectSimpleUSDRootAutoUpdateInstance(plugin.HoudiniContextPlugin):
         )
 
 
-class CollectSimpleUSDRootAutoUpdateArcs(plugin.HoudiniContextPlugin):
+class CollectSimpleUSDRootAutoUpdateArcs(pyblish.api.ContextPlugin):
     """Resolve the model/look/fx/groom source paths for automatic root
     update instances, now that CollectAnatomyInstanceData has resolved
     version/anatomyData on every instance in the context (including the
@@ -211,6 +218,7 @@ class CollectSimpleUSDRootAutoUpdateArcs(plugin.HoudiniContextPlugin):
     label = "Collect Simple USD Root Auto-Update Arcs"
     # After CollectAnatomyInstanceData (CollectorOrder + 0.49).
     order = pyblish.api.CollectorOrder + 0.5
+    hosts = HOSTS
 
     def process(self, context):
         for instance in context:

@@ -21,7 +21,7 @@ class USDModelReferenceLoader(plugin.HoudiniLoader):
     product_types = {"model","look"}
     product_base_types = {
         "model", "look", "fx", "groom",
-        "layout", "animation", "lighting", "render",
+        "layout", "animation", "lighting", "render", "usd"
     }
     label = "Reference USD"
     representations = {"usd", "usda", "usdlc", "usdnc"}

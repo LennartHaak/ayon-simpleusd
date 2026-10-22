@@ -11,7 +11,8 @@ the note is there from the moment the version exists.
 
 Deliberately plain pyblish.api.InstancePlugin (no ayon_houdini/hou import)
 since nothing here needs a live Houdini session - everything runs purely
-off pyblish instance data collected earlier in the publish.
+off pyblish instance data collected earlier in the publish, so it also
+covers the Blender "SimpleUSD Model (via Houdini)" creator.
 """
 import pyblish.api
 
@@ -19,7 +20,11 @@ PART_PRODUCT_TYPES = {"model", "look", "fx", "groom"}
 # "fx" is also used as a product type by the unrelated SimpleUSD Shot
 # creator (create_usd_shot.py) - gate on the actual creator too so a
 # shot FX publish doesn't get swept into this asset-part-only pathway.
-ASSET_CREATOR_IDENTIFIER = "io.ayon.creators.houdini.simpleusd.asset"
+ASSET_CREATOR_IDENTIFIERS = {
+    "io.ayon.creators.houdini.simpleusd.asset",
+    # Blender model converted through headless Houdini.
+    "io.ayon.creators.blender.simpleusd.model",
+}
 
 
 class CollectSimpleUSDVersionComment(pyblish.api.InstancePlugin):
@@ -37,7 +42,7 @@ class CollectSimpleUSDVersionComment(pyblish.api.InstancePlugin):
         elif (
             product_type in PART_PRODUCT_TYPES
             and instance.data.get("creator_identifier")
-            == ASSET_CREATOR_IDENTIFIER
+            in ASSET_CREATOR_IDENTIFIERS
         ):
             note = self._get_part_note(instance)
         else:

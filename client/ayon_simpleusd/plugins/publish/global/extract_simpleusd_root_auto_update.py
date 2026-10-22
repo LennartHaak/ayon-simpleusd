@@ -3,33 +3,39 @@
 collect_simpleusd_root_auto_update.py).
 
 Builds the root USD layer directly via the pxr Sdf API - no Houdini LOP
-node network is created or cooked. The triggering publish already runs
-inside a live Houdini session (model/look/fx/groom are Houdini-only
-creators), so `pxr` is available, but using an actual usd_rop node here
-would mean loading/cooking a separate root scene/HDA network the way the
-manual "SimpleUSD Root Asset" creator does - which is exactly what this
-feature must avoid.
+node network is created or cooked. The triggering publish runs inside
+Houdini or Blender, both of which ship `pxr`, but using an actual usd_rop
+node here would mean loading/cooking a separate root scene/HDA network
+the way the manual "SimpleUSD Root Asset" creator does - which is exactly
+what this feature must avoid.
+
+`pxr` is imported inside the methods so other hosts can still discover
+this global plugin module without it.
 """
 import os
 
 import pyblish.api
-from pxr import Sdf, Tf, Usd
 
-from ayon_core.pipeline.usdlib import (
-    set_layer_defaults,
-    get_or_define_prim_spec,
-)
-from ayon_houdini.api import plugin
+# Module import, not `from ... import Extractor` - pyblish would discover
+# the imported base class as a plugin of its own.
+from ayon_core.pipeline import publish
 
 
-class ExtractSimpleUSDRootAutoUpdate(plugin.HoudiniExtractorPlugin):
+class ExtractSimpleUSDRootAutoUpdate(publish.Extractor):
     """Write the automatically-updated root USD file."""
 
     label = "Extract Simple USD Root Auto-Update"
     order = pyblish.api.ExtractorOrder
+    hosts = ["houdini", "blender"]
     families = ["simpleusdAutoRoot"]
 
     def process(self, instance):
+        from pxr import Sdf, Tf
+        from ayon_core.pipeline.usdlib import (
+            set_layer_defaults,
+            get_or_define_prim_spec,
+        )
+
         folder_path = instance.data["folderPath"]
         asset_name = Tf.MakeValidIdentifier(folder_path.rsplit("/", 1)[-1])
 
@@ -94,6 +100,9 @@ class ExtractSimpleUSDRootAutoUpdate(plugin.HoudiniExtractorPlugin):
         overrides the missing type from the weaker payloaded/referenced
         part files.
         """
+        from pxr import Usd
+        from ayon_core.pipeline.usdlib import get_or_define_prim_spec
+
         stage = Usd.Stage.Open(layer)
         for prim in stage.TraverseAll():
             if prim.GetTypeName():

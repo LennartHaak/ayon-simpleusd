@@ -1,0 +1,8 @@
+# HDAs and hip files must keep their exact bytes - no EOL conversion.
+*.hda   binary
+*.hdanc binary
+*.hdalc binary
+*.otl   binary
+*.hip   binary
+*.hipnc binary
+*.hiplc binary

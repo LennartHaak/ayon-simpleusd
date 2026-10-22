@@ -1,4 +1,23 @@
-from ayon_server.settings import BaseSettingsModel, SettingsField
+from ayon_server.settings import (
+    BaseSettingsModel,
+    SettingsField,
+    task_types_enum,
+    folder_types_enum,
+)
+
+# Template names - the client picks the file for the running app from
+# client/ayon_simpleusd/templates, named "{host}_{name}[_v###].{ext}"
+# (e.g. houdini_model_template_v001.hipnc, blender_model_template_v001.blend)
+# - the highest version wins.
+INCLUDED_TEMPLATES = [
+    {"value": "model_template", "label": "Model"},
+    {"value": "shading_template", "label": "Shading"},
+]
+
+TEMPLATE_SOURCES = [
+    {"value": "included", "label": "Included with Simple USD"},
+    {"value": "custom", "label": "Custom Path"},
+]
 
 
 class AyonReviewStatusSettings(BaseSettingsModel):
@@ -67,8 +86,140 @@ class RootAssetSettings(BaseSettingsModel):
     )
 
 
+class BlenderHoudiniModelSettings(BaseSettingsModel):
+    houdini_app: str = SettingsField(
+        "",
+        title="Houdini Application",
+        description=(
+            "Houdini application variant (e.g. 'houdini/21-0') whose "
+            "hython converts the Alembic exported by Blender's 'SimpleUSD "
+            "Model (via Houdini)' publish. Empty uses the latest variant "
+            "with an existing executable."
+        ),
+    )
+    timeout: int = SettingsField(
+        600,
+        title="Timeout (seconds)",
+        ge=1,
+        description="Fail the publish if the conversion takes longer.",
+    )
+
+
+class TemplateSourceModel(BaseSettingsModel):
+    # Kept as its own model - conditional_enum hides every sibling field
+    # that isn't named by the selected value.
+    _layout = "expanded"
+    source: str = SettingsField(
+        "included",
+        title="Template Source",
+        enum_resolver=lambda: TEMPLATE_SOURCES,
+        conditional_enum=True,
+    )
+    included: str = SettingsField(
+        "model_template",
+        title="Included Template",
+        enum_resolver=lambda: INCLUDED_TEMPLATES,
+        description=(
+            "Each app uses its own version of the template (Houdini "
+            "houdini_<name>_v###.hipnc, Blender blender_<name>_v###.blend, "
+            "highest version wins). Apps without one skip this profile."
+        ),
+    )
+    custom: str = SettingsField(
+        "",
+        title="Custom Path",
+        description=(
+            "Path to a template scene. The extension decides which app "
+            "uses it: .hip/.hipnc/.hiplc for Houdini, .blend for "
+            "Blender. Supports anatomy roots ({root[work]}), environment "
+            "variables ({ENV_VAR}) and in Houdini also Houdini variables "
+            "($VAR). The bundled templates are available under "
+            "{SIMPLEUSD_TEMPLATES}."
+        ),
+    )
+
+
+class WorkfileTemplateProfile(BaseSettingsModel):
+    task_types: list[str] = SettingsField(
+        default_factory=list,
+        title="Task Types",
+        enum_resolver=task_types_enum,
+    )
+    task_names: list[str] = SettingsField(
+        default_factory=list,
+        title="Task Names",
+    )
+    folder_types: list[str] = SettingsField(
+        default_factory=list,
+        title="Folder Types",
+        enum_resolver=folder_types_enum,
+    )
+    folder_paths: list[str] = SettingsField(
+        default_factory=list,
+        title="Folder Paths",
+    )
+    template: TemplateSourceModel = SettingsField(
+        default_factory=TemplateSourceModel,
+        title="Template",
+        section="Template Configuration",
+    )
+    keep_placeholder: bool = SettingsField(
+        False,
+        title="Keep Placeholders",
+    )
+    create_first_version: bool = SettingsField(
+        True,
+        title="Create First Version",
+        description=(
+            "Save the built scene as the task's first workfile version "
+            "when no workfile exists yet."
+        ),
+    )
+
+
+class WorkfileTemplatesSettings(BaseSettingsModel):
+    """Template scene built into a new, unsaved Houdini or Blender scene.
+
+    Works like the hosts' own 'Templated Workfile Build', but can use the
+    templates shipped with this addon - one profile serves both apps, each
+    picks its own template file. If a Houdini/Blender 'Templated Workfile
+    Build' profile matches the same task, that one wins and these are
+    skipped.
+    """
+    enabled: bool = SettingsField(True, title="Enabled")
+    profiles: list[WorkfileTemplateProfile] = SettingsField(
+        default_factory=lambda: [
+            WorkfileTemplateProfile(
+                task_types=["Modeling"],
+                template=TemplateSourceModel(
+                    source="included",
+                    included="model_template",
+                ),
+            ),
+            WorkfileTemplateProfile(
+                task_types=["Lookdev"],
+                template=TemplateSourceModel(
+                    source="included",
+                    included="shading_template",
+                ),
+            ),
+        ],
+        title="Profiles",
+    )
+
+
 class SimpleUSDSettings(BaseSettingsModel):
     enabled: bool = SettingsField(True, title="Enabled")
+    hide_official_houdini_plugins: bool = SettingsField(
+        True,
+        title="Hide Official Houdini Plugins",
+        description=(
+            "Hide ayon-houdini's own creators/loaders in the Publisher "
+            "and Loader, keeping only Simple USD's visible (the Houdini "
+            "Workfile and Review creators stay available). Takes effect "
+            "on the next Houdini launch."
+        ),
+    )
     ayon_review_status: AyonReviewStatusSettings = SettingsField(
         default_factory=AyonReviewStatusSettings,
         title="AYON Review Status",
@@ -80,4 +231,12 @@ class SimpleUSDSettings(BaseSettingsModel):
     root_asset: RootAssetSettings = SettingsField(
         default_factory=RootAssetSettings,
         title="Root Asset",
+    )
+    blender_houdini_model: BlenderHoudiniModelSettings = SettingsField(
+        default_factory=BlenderHoudiniModelSettings,
+        title="Blender Model (via Houdini)",
+    )
+    workfile_templates: WorkfileTemplatesSettings = SettingsField(
+        default_factory=WorkfileTemplatesSettings,
+        title="Workfile Templates",
     )

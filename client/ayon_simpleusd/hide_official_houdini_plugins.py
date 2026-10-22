@@ -18,11 +18,19 @@ The workfile auto-creator and the stock Review (OpenGL/Flipbook)
 creator are re-enabled afterwards via register_creator_plugin(), which
 stores each class separately from the path-based scan - so they keep
 showing up even though CREATE_PATH itself stays deregistered.
+
+Controlled by 'project_settings/simple-usd/hide_official_houdini_plugins'.
 """
 
 
 def hide_official_houdini_plugins():
     import os
+
+    from ayon_core.settings import get_current_project_settings
+
+    settings = get_current_project_settings().get("simple-usd", {})
+    if not settings.get("hide_official_houdini_plugins", True):
+        return
 
     from ayon_core.pipeline import (
         deregister_creator_plugin_path,

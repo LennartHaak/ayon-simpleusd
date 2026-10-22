@@ -105,10 +105,18 @@ class CreateSimpleUSDShot(plugin.HoudiniCreator):
             "IntegrateHeroVersion": {"active": False},
         })
 
-        # `HoudiniCreator.create()` builds the instance from `self.
-        # product_type`/`self.product_base_type` rather than from
-        # `instance_data`, so temporarily point them at the selected type
-        # for the duration of the call.
+        # The Create dialog also passes the static class-level type in
+        # `instance_data["productType"]`/`["productBaseType"]`, and
+        # `HoudiniCreator.create()` prefers that over `self.product_type`
+        # - overwrite it with the actually selected type, otherwise e.g.
+        # an Animation publishes as product type "layout".
+        instance_data["productType"] = type_info["product_type"]
+        instance_data["productBaseType"] = type_info["product_base_type"]
+
+        # `HoudiniCreator.create()` still falls back to `self.
+        # product_type`/`self.product_base_type` (e.g. it always passes
+        # `product_base_type=self.product_base_type`), so temporarily point
+        # them at the selected type for the duration of the call too.
         original_product_type = self.product_type
         original_product_base_type = self.product_base_type
         self.product_type = type_info["product_type"]
