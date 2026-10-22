@@ -2,6 +2,8 @@ AYON SimpleUSD Plugin
 =============
 This plugin aims to simplify AYONs USD workflow as it is a bit overkill for smaller productions.
 
+📖 **Documentation:** see [docs/](docs/README.md) I generated the first version with AI. I'm currently rewriting it to be more usable.
+
 Not Production Ready. It only supports the creation and loading of USD files for Assets.
 
 At the moment it mainly supports Houdini; Blender can publish models through a headless Houdini conversion. Nuke support is planned.
