@@ -9,9 +9,12 @@ from ayon_server.settings import (
 # client/ayon_simpleusd/templates, named "{host}_{name}[_v###].{ext}"
 # (e.g. houdini_model_template_v001.hipnc, blender_model_template_v001.blend)
 # - the highest version wins.
+# Add new templates here and in the WorkfileTemplatesSettings default profiles.
 INCLUDED_TEMPLATES = [
     {"value": "model_template", "label": "Model"},
     {"value": "shading_template", "label": "Shading"},
+    {"value": "assetfx_template", "label": "Asset FX"},
+    {"value": "assetgroom_template", "label": "Asset Groom"},
 ]
 
 TEMPLATE_SOURCES = [
@@ -186,21 +189,36 @@ class WorkfileTemplatesSettings(BaseSettingsModel):
     Build' profile matches the same task, that one wins and these are
     skipped.
     """
+    #New ones also have to be added at the top at included templates
     enabled: bool = SettingsField(True, title="Enabled")
     profiles: list[WorkfileTemplateProfile] = SettingsField(
         default_factory=lambda: [
             WorkfileTemplateProfile(
-                task_types=["Modeling"],
+                task_types=["Model"],
                 template=TemplateSourceModel(
                     source="included",
                     included="model_template",
                 ),
             ),
             WorkfileTemplateProfile(
-                task_types=["Lookdev"],
+                task_types=["Shading"],
                 template=TemplateSourceModel(
                     source="included",
                     included="shading_template",
+                ),
+            ),
+            WorkfileTemplateProfile(
+                task_types=["Asset_FX"],
+                template=TemplateSourceModel(
+                    source="included",
+                    included="assetfx_template",
+                ),
+            ),
+            WorkfileTemplateProfile(
+                task_types=["Asset_Groom"],
+                template=TemplateSourceModel(
+                    source="included",
+                    included="assetgroom_template",
                 ),
             ),
         ],

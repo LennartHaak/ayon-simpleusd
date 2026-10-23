@@ -146,3 +146,5 @@ Sublayers USD (Not needed can be removed)
 - create HDAs to move lights directly under the light primitive so artists don't have to do it manually
 - Assets when loaded to shot get put in correct location based on filepath
 - OpenGL Output on Farm
+
+- Frame range per Renderpackage
