@@ -139,6 +139,7 @@ Sublayers USD (Not needed can be removed)
 - Root File
   - Loading a root file into a task mutes the task its loaded into
     - have a layer break under the root file to allow for task specific overrides
+  - Shots should also have root files
 
 - Rendering Task
 - Match Move Task
@@ -148,3 +149,22 @@ Sublayers USD (Not needed can be removed)
 - OpenGL Output on Farm
 
 - Frame range per Renderpackage
+
+- SimpleUSD Render copy remainder toggle missing, need to add a keep existing frames toggle so I don't have to rerender everything if I just want to fix a few frames. Royal Render already has this feature so it should be easy to implement.
+  - Or we do Copy remainder with a dropdown for previous work and publish version
+  - old frames don't get found and Ayon erros because we changed the render save structure
+  - Have an input for render and for packing group on farm
+    - Local packing seems broken
+  - Is it possible to pack in chunks so we don't have to pack the whole render package if we only need 10 Frames?
+    - Also can we add a toggle for reusing the previous render package so we can skip the packing for a quick rerender. Altough this doesn't really make sense because you can't change render settings. Unless you maybe can?
+  - Render logs show no info when packing and for FFMPEG is there a way to have the progress be printed in the RR Job Log?
+    - FFMPEG has a green frame when it has no image to fill the empty space. Can we make it black?
+
+-Install Ayon on all pcs and add to ayon group in RR
+
+- Find a way to put all USD layers in correct location when loading into a shot.
+
+- For some reason Breakdown sh010 didn't render without flattening the stage. idk why this error didn't happen before. But maybe we should just flatten the stage when rendering and just take the file size hit
+  - We would otherwise prolly need a USD configure to save everything next to the publish. That would be cleaner but file size wouldn't be smaller I guess
+
+- Camera Publish and read
