@@ -1,4 +1,8 @@
 Used to clean up landing README and to move Todos here
+- ## Bugs:
+  - ### Root Asset Loader:
+    - Transform inside group is set to transform everything with payload not just the referenced file
+    - When Loading asset it looses structure type assignments without SimpleUSD_Asset_Structure have to bake it
 
 - ## Automatic Turntables:
   - ### Needs:
